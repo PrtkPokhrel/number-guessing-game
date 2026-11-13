@@ -1,8 +1,14 @@
 
 import tkinter as tk
+from tkinter import messagebox, simpledialog
 
 from config.settings import *
-from game.logic import generate_number, check_guess
+from game.logic import (
+    generate_number,
+    check_guess,
+    generate_math_question,
+    generate_hint
+)
 
 
 class GameScreen:
@@ -15,6 +21,7 @@ class GameScreen:
 
         self.secret_number = 0
         self.attempts = 0
+        self.hint_used = False
 
         # Title
         title_label = tk.Label(
@@ -74,6 +81,21 @@ class GameScreen:
         )
         self.guess_button.pack(pady=20, ipadx=45, ipady=8)
 
+        # Hint button
+        self.hint_button = tk.Button(
+            self.frame,
+            text="GET HINT",
+            font=("Arial", 10, "bold"),
+            bg=BUTTON_BACKGROUND,
+            fg=TEXT_COLOR,
+            activebackground=BUTTON_HOVER,
+            activeforeground=TEXT_COLOR,
+            relief="flat",
+            cursor="hand2",
+            command=self.request_hint
+        )
+        self.hint_button.pack(pady=5, ipadx=25, ipady=7)
+
         # Result message
         self.result_label = tk.Label(
             self.frame,
@@ -127,6 +149,49 @@ class GameScreen:
         # Start a new game
         self.restart_game()
 
+    def request_hint(self):
+
+        # Check whether the hint was already used
+        if self.hint_used:
+            messagebox.showinfo(
+                "Hint",
+                "You have already used your hint!"
+            )
+            return
+
+        # Generate a maths question
+        question, correct_answer = generate_math_question()
+
+        # Ask the player to solve it
+        user_answer = simpledialog.askinteger(
+            "Math Challenge",
+            f"Solve this question to unlock your hint:\n\n{question}",
+            parent=self.frame
+        )
+
+        # Player cancelled
+        if user_answer is None:
+            return
+
+        # Check the answer
+        if user_answer == correct_answer:
+
+            hint = generate_hint(self.secret_number)
+
+            messagebox.showinfo(
+                "Hint Unlocked!",
+                f"Congratulations! Here's your hint:\n\n{hint}"
+            )
+
+            self.hint_used = True
+            self.hint_button.config(state="disabled")
+
+        else:
+            messagebox.showerror(
+                "Incorrect Answer",
+                "Oops! That's incorrect.\nYou didn't unlock the hint."
+            )
+
     def check_user_guess(self):
 
         user_input = self.guess_entry.get()
@@ -174,6 +239,7 @@ class GameScreen:
             )
 
             self.guess_button.config(state="disabled")
+            self.hint_button.config(state="disabled")
 
         self.guess_entry.delete(0, tk.END)
 
@@ -181,6 +247,7 @@ class GameScreen:
 
         self.secret_number = generate_number()
         self.attempts = 0
+        self.hint_used = False
 
         self.attempts_label.config(text="Attempts: 0")
 
@@ -190,13 +257,13 @@ class GameScreen:
         )
 
         self.guess_button.config(state="normal")
+        self.hint_button.config(state="normal")
 
         self.guess_entry.delete(0, tk.END)
         self.guess_entry.focus()
 
     def show(self):
         self.frame.pack(fill="both", expand=True)
-
         self.guess_entry.focus()
 
     def hide(self):
