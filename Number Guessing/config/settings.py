@@ -28,3 +28,7 @@ INPUT_BACKGROUND = "#2d3748"
 TITLE_FONT = ("Arial", 20, "bold")
 NORMAL_FONT = ("Arial", 11)
 BUTTON_FONT = ("Arial", 12, "bold")
+
+
+# Audio settings
+MUSIC_VOLUME = 0.35
